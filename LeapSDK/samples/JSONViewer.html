@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!------------------------------------------------------------------------------
+| Copyright (C) 2012-2013 Leap Motion, Inc. All rights reserved.               |
+| Leap Motion proprietary and confidential. Not for distribution.              |
+| Use subject to the terms of the Leap Motion SDK Agreement available at       |
+| https://developer.leapmotion.com/sdk_agreement, or another agreement         |
+| between Leap Motion and you, your company or other organization.             |
+------------------------------------------------------------------------------->
+<html>
+<head>
+<title>Leap WebSocket JSON Viewer</title>
+<script>
+var ws;
+var paused = false;
+var pauseOnGesture = false;
+var focusListener;
+var blurListener;
+
+// Support both the WebSocket and MozWebSocket objects
+if ((typeof(WebSocket) == 'undefined') &&
+    (typeof(MozWebSocket) != 'undefined')) {
+    WebSocket = MozWebSocket;
+}
+
+// Create the socket with event handlers
+function init() {
+    // Create and open the socket
+    ws = new WebSocket("ws://localhost:6437/v6.json");
+
+    // On successful connection
+    ws.onopen = function(event) {
+        var enableMessage = JSON.stringify({enableGestures: true});
+        ws.send(enableMessage); // Enable gestures
+        ws.send(JSON.stringify({focused: true})); // claim focus
+
+        focusListener = window.addEventListener('focus', function(e) {
+                               ws.send(JSON.stringify({focused: true})); // claim focus
+                         });
+
+        blurListener = window.addEventListener('blur', function(e) {
+                               ws.send(JSON.stringify({focused: false})); // relinquish focus
+                         });
+
+        document.getElementById("main").style.visibility = "visible";
+        document.getElementById("connection").innerHTML = "WebSocket connection open!";
+    };
+
+    // On message received
+    ws.onmessage = function(event) {
+        if (!paused) {
+            var obj = JSON.parse(event.data);
+            var str = JSON.stringify(obj, undefined, 2);
+            document.getElementById("output").innerHTML = '<pre>' + str + '</pre>';
+            if (pauseOnGesture && obj.gestures.length > 0) {
+                togglePause();
+            }
+        }
+    };
+    
+    // On socket close
+    ws.onclose = function(event) {
+        ws = null;
+        window.removeListener("focus", focusListener);
+        window.removeListener("blur", blurListener);
+        document.getElementById("main").style.visibility = "hidden";
+        document.getElementById("connection").innerHTML = "WebSocket connection closed";
+    }
+
+    // On socket error
+    ws.onerror = function(event) {
+      alert("Received error");
+    };
+}
+
+function togglePause() {
+  paused = !paused;
+
+  if (paused) {
+    document.getElementById("pause").innerText = "Resume";
+  } else {
+    document.getElementById("pause").innerText = "Pause";
+  }
+}
+
+function pauseForGestures() {
+  if (document.getElementById("pauseOnGesture").checked) {
+    pauseOnGesture = true;
+  } else {
+    pauseOnGesture = false;
+  }
+}
+</script>
+</head>
+<body onload="init();">
+<h1>Leap WebSocket JSON Viewer</h1>
+<button id="pause" onclick="togglePause()">Pause</button>
+<input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
+<div id="connection">WebSocket not connected</div>
+<div id="main" style="visibility:hidden">
+  <h3>JSON Frame data:</h3>
+  <div id="output"></div>
+</div>
+</body>
+</html>
