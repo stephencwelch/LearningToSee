@@ -8,22 +8,22 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 #Extract 9 by 9 grid and finger/not finger label from imageDict
-def extractFeatures(imageDict, whichImage = 'image1bit', dist = 4):
+def extractFeatures(imageDict, whichImage = b'image1bit', dist = 4):
     img = imageDict[whichImage]
 
     featuresList = []
-    target = np.zeros(imageDict['numPointsInBox'])
+    target = np.zeros(imageDict[b'numPointsInBox'])
     counter = 0
 
-    for i in np.arange(imageDict['boxEdges'][2], imageDict['boxEdges'][3]):
-        for j in np.arange(imageDict['boxEdges'][0], imageDict['boxEdges'][1]):
+    for i in np.arange(imageDict[b'boxEdges'][2], imageDict[b'boxEdges'][3]):
+        for j in np.arange(imageDict[b'boxEdges'][0], imageDict[b'boxEdges'][1]):
             f = img[i-dist:i+dist+1, j-dist:j+dist+1]
 
             fVec = f.ravel()
             featuresList.append(fVec)
 
             #Check and see if this is a finger pixel or not:
-            if np.max(np.sum(imageDict['allFingerPoints'] == [i, j], 1)) == 2:
+            if np.max(np.sum(imageDict[b'allFingerPoints'] == [i, j], 1)) == 2:
                 target[counter] = 1
 
             counter = counter +1
@@ -33,7 +33,7 @@ def extractFeatures(imageDict, whichImage = 'image1bit', dist = 4):
     return features, target
 
 #Extract indivudual examples from list of imageDicts:
-def extractExamplesFromList(imageList, whichImage = 'image1bit', dist = 4):
+def extractExamplesFromList(imageList, whichImage = b'image1bit', dist = 4):
     allFeaturesList = []
     allTargetList = []
 
@@ -75,13 +75,13 @@ def make_colormap(seq):
     return mcolors.LinearSegmentedColormap('CustomMap', cdict)
 
 def makeGrayScale(imageDict):
-    im = np.zeros((imageDict['boxHeight'], imageDict['boxWidth'], 3))
-    im[:,:,0] = 1./255*imageDict['image'][imageDict['boxEdges'][2]:imageDict['boxEdges'][3], \
-                                       imageDict['boxEdges'][0]:imageDict['boxEdges'][1]] 
-    im[:,:,1] = 1./255*imageDict['image'][imageDict['boxEdges'][2]:imageDict['boxEdges'][3], \
-                                       imageDict['boxEdges'][0]:imageDict['boxEdges'][1]]
-    im[:,:,2] = 1./255*imageDict['image'][imageDict['boxEdges'][2]:imageDict['boxEdges'][3], \
-                                       imageDict['boxEdges'][0]:imageDict['boxEdges'][1]]
+    im = np.zeros((imageDict[b'boxHeight'], imageDict[b'boxWidth'], 3))
+    im[:,:,0] = 1./255*imageDict[b'image'][imageDict[b'boxEdges'][2]:imageDict[b'boxEdges'][3], \
+                                       imageDict[b'boxEdges'][0]:imageDict[b'boxEdges'][1]] 
+    im[:,:,1] = 1./255*imageDict[b'image'][imageDict[b'boxEdges'][2]:imageDict[b'boxEdges'][3], \
+                                       imageDict[b'boxEdges'][0]:imageDict[b'boxEdges'][1]]
+    im[:,:,2] = 1./255*imageDict[b'image'][imageDict[b'boxEdges'][2]:imageDict[b'boxEdges'][3], \
+                                       imageDict[b'boxEdges'][0]:imageDict[b'boxEdges'][1]]
     
     return im
 
@@ -115,13 +115,13 @@ def computeConfusionMatrix(y, yHat, verbose = True):
     accuracy = float(TP+TN)/len(y)
     
     if verbose:
-        print 'Confusion Matrix:'
-        print cm
-        print 'Recall (TPR) = ' + str(round(recall,3))  + \
-            ' (Portion of fingers that we "caught")'
-        print 'Precision (PPV) = ' + str(round(precision,3)) + \
-            '(Portion of predicted finger pixels that were actually finger pixels)'
-        print 'Accuracy = ' + str(round(accuracy,3))
+        print ('Confusion Matrix:')
+        print (cm)
+        print ('Recall (TPR) = ' + str(round(recall,3))  + \
+            ' (Portion of fingers that we "caught")')
+        print ('Precision (PPV) = ' + str(round(precision,3)) + \
+            '(Portion of predicted finger pixels that were actually finger pixels)')
+        print ('Accuracy = ' + str(round(accuracy,3)))
     
     return cm, accuracy, recall, precision
 
@@ -139,7 +139,7 @@ def testRules(rules, exampleIndices, data, fig, X, y, showLegend = True, color =
         ax = fig.add_subplot(1,4,i+1)
         imageDict = data[exampleIndices[i]]
 
-        X1, y1 = extractFeatures(imageDict, whichImage = 'image1bit', dist = 4)
+        X1, y1 = extractFeatures(imageDict, whichImage = b'image1bit', dist = 4)
         im = makeGrayScale(imageDict)
 
         matchingIndices = np.array([], dtype = 'int')
@@ -170,21 +170,21 @@ def testRules(rules, exampleIndices, data, fig, X, y, showLegend = True, color =
         falseNegatives = np.logical_and(y1, np.logical_not(matchVec))
 
         if color == 'Full':
-            fNImage = falseNegatives.reshape(imageDict['boxHeight'], imageDict['boxWidth'])
+            fNImage = falseNegatives.reshape(imageDict[b'boxHeight'], imageDict[b'boxWidth'])
 
             #Paint with matches:
             im[:,:,0][fNImage==1] = 1
             im[:,:,1][fNImage==1] = 1
             im[:,:,2][fNImage==1] = 0
 
-            tPImage = truePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+            tPImage = truePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
             #Paint with matches:
             im[:,:,0][tPImage==1] = 0
             im[:,:,1][tPImage==1] = 1
             im[:,:,2][tPImage==1] = 0
 
-            fNImage = falsePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+            fNImage = falsePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
             #Paint with matches:
             im[:,:,0][fNImage==1] = 1
@@ -193,7 +193,7 @@ def testRules(rules, exampleIndices, data, fig, X, y, showLegend = True, color =
             
         if color == 'Green':
             
-            matchImage = matchVec.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+            matchImage = matchVec.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
             #Paint with matches:
             im[:,:,0][matchImage==1] = 0
@@ -247,7 +247,7 @@ def showMatches(rules, exampleIndices, data, fig, verbose = True):
         
         imageDict = data[exampleIndices[i]]
 
-        X, y = extractFeatures(imageDict, whichImage = 'image1bit', dist = 4)
+        X, y = extractFeatures(imageDict, whichImage = b'image1bit', dist = 4)
         im = makeGrayScale(imageDict)
 
         matchingIndices = np.array([], dtype = 'int')
@@ -259,7 +259,7 @@ def showMatches(rules, exampleIndices, data, fig, verbose = True):
         matchVec = np.zeros(X.shape[0])
         matchVec[matchingIndices] = 1
 
-        matchImage = matchVec.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+        matchImage = matchVec.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
         #Paint with matches:
         im[:,:,0][matchImage==1] = 0
@@ -279,10 +279,10 @@ def testLogicalRules(exampleIndices, data, fig, X, y, rule):
         ax = fig.add_subplot(1,4,i+1)
         imageDict = data[exampleIndices[i]]
 
-        X1, y1 = extractFeatures(imageDict, whichImage = 'image1bit', dist = 4)
+        X1, y1 = extractFeatures(imageDict, whichImage = b'image1bit', dist = 4)
 
         im = makeGrayScale(imageDict)
-        yImage = y1.reshape(imageDict['boxHeight'], imageDict['boxWidth'])
+        yImage = y1.reshape(imageDict[b'boxHeight'], imageDict[b'boxWidth'])
 
         #Paint with matches:
         im[:,:,0][yImage==1] = 1
@@ -294,14 +294,14 @@ def testLogicalRules(exampleIndices, data, fig, X, y, rule):
         truePositives = np.logical_and(y1, yHat)
         falsePositives = np.logical_and(np.logical_not(y1), yHat)
 
-        tPImage = truePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+        tPImage = truePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
         #Paint with matches:
         im[:,:,0][tPImage==1] = 0
         im[:,:,1][tPImage==1] = 1
         im[:,:,2][tPImage==1] = 0
 
-        fNImage = falsePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+        fNImage = falsePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
         #Paint with matches:
         im[:,:,0][fNImage==1] = 1
@@ -331,7 +331,7 @@ def testLogicalRules(exampleIndices, data, fig, X, y, rule):
 #         X1, y1 = extractFeatures(imageDict, whichImage = 'image1bit', dist = 4)
 
 #         im = makeGrayScale(imageDict)
-#         yImage = y1.reshape(imageDict['boxHeight'], imageDict['boxWidth'])
+#         yImage = y1.reshape(imageDict[b'boxHeight'], imageDict[b'boxWidth'])
 
 #         #Paint with matches:
 #         im[:,:,0][yImage==1] = 1
@@ -350,14 +350,14 @@ def testLogicalRules(exampleIndices, data, fig, X, y, rule):
 #         truePositives = np.logical_and(y1, matchVec)
 #         falsePositives = np.logical_and(np.logical_not(y1), matchVec)
 
-#         tPImage = truePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+#         tPImage = truePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
 #         #Paint with matches:
 #         im[:,:,0][tPImage==1] = 0
 #         im[:,:,1][tPImage==1] = 1
 #         im[:,:,2][tPImage==1] = 0
 
-#         fNImage = falsePositives.reshape((imageDict['boxHeight'], imageDict['boxWidth']))
+#         fNImage = falsePositives.reshape((imageDict[b'boxHeight'], imageDict[b'boxWidth']))
 
 #         #Paint with matches:
 #         im[:,:,0][fNImage==1] = 1
